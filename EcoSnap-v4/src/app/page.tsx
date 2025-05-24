@@ -128,7 +128,7 @@ const topHorizontalCategories: Array<{
 }> = [
   { id: 'cardboard', name: 'Cardboard', imageUrl: '/assets/images/cardboard.png', dataAiHint: 'cardboard box' },
   { id: 'paper', name: 'Paper', imageUrl: '/assets/images/paper.png', dataAiHint: 'stack paper' },
-  { id: 'plasticOther', name: 'Plastic', imageUrl: '/assets/images/plastic.png', dataAiHint: 'plastic bottle general', icon: Recycle }, // 'plastic' as an id might conflict, using 'plasticOther' for general plastic imagery
+  { id: 'plasticOther', name: 'Plastic', imageUrl: '/assets/images/plastic.png', dataAiHint: 'plastic bottle general', icon: Recycle },
   { id: 'glass', name: 'Glass', imageUrl: '/assets/images/glass.png', dataAiHint: 'glass jar' },
   { id: 'ewaste', name: 'E-Waste', imageUrl: '/assets/images/ewaste.png', dataAiHint: 'electronic waste' },
   { id: 'biowaste', name: 'Bio-Waste', imageUrl: '/assets/images/bio-waste.png', dataAiHint: 'food waste' },
@@ -439,6 +439,15 @@ export default function HomePage() {
            console.warn(`>>> [CLASSIFY WARN] Could not find category details or quantityKey for AI-determined category: ${aiDeterminedSpecificCategory}. No specific quantity updated.`);
         }
 
+        // If a specific category was initiated by the user (e.g., they clicked "Cardboard"),
+        // ensure that specific count is also incremented, regardless of AI's output,
+        // if AI's output isn't the same as user-initiated, for manual log feel.
+        // However, our current AI model is now the primary source for specific category.
+        if (categoryUserInitiatedWith && categoryUserInitiatedWith !== 'general' && categoryUserInitiatedWith !== aiDeterminedSpecificCategory) {
+          console.log(`>>> [CLASSIFY LOG] User initiated with '${categoryUserInitiatedWith}', AI determined '${aiDeterminedSpecificCategory}'. AI category takes precedence for quantity update.`);
+        }
+
+
         saveToLocalStorage(USER_DATA_KEY, newUserDataState);
         console.log(">>> [CLASSIFY LOG] FINAL newUserDataState for setUserData:", JSON.stringify(newUserDataState, null, 2));
         return newUserDataState;
@@ -509,7 +518,7 @@ export default function HomePage() {
                      ? currentUploadCategory
                      : 'general';
       return wasteCategoryFiveRTips[tipKey];
-  }, [currentUploadCategory, wasteCategoryFiveRTips]); // Added wasteCategoryFiveRTips as dependency
+  }, [currentUploadCategory]); 
 
   const SelectedCategoryIcon = useMemo(() => selectedCategoryTips?.icon || HelpCircle, [selectedCategoryTips]);
 
