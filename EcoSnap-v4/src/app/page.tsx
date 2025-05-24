@@ -439,14 +439,25 @@ export default function HomePage() {
           newUserDataState[keyToUpdate] = currentSpecificQuantity + 1;
           console.log(`>>> [CLASSIFY LOG] Updated specific quantity for ${keyToUpdate} in newUserDataState to: ${newUserDataState[keyToUpdate]}`);
         } else {
-           console.warn(`>>> [CLASSIFY WARN] Could not find category details or quantityKey for AI-determined category: ${aiDeterminedSpecificCategory}. No specific quantity updated based on AI.`);
+           // If the AI category doesn't directly map, try to update based on what the user initially clicked (if available)
+           console.warn(`>>> [CLASSIFY WARN] Could not find category details or quantityKey for AI-determined category: ${aiDeterminedSpecificCategory}.`);
+           if (categoryUserInitiatedWith && categoryUserInitiatedWith !== 'general') {
+             console.log(`>>> [CLASSIFY LOG] Attempting to update specific quantity based on user initiated category: ${categoryUserInitiatedWith}`);
+             const userInitiatedCategoryDetails = verticalLogCategories.find(cat => cat.id === categoryUserInitiatedWith);
+             if (userInitiatedCategoryDetails && userInitiatedCategoryDetails.quantityKey) {
+               const keyToUpdate = userInitiatedCategoryDetails.quantityKey;
+               const currentSpecificQuantity = Number(newUserDataState[keyToUpdate] || 0);
+               console.log(`>>> [CLASSIFY LOG] Found quantityKey for user initiated category '${categoryUserInitiatedWith}': ${keyToUpdate}`);
+               console.log(`>>> [CLASSIFY LOG] Current value for ${keyToUpdate} (user-initiated) in newUserDataState (before increment): ${currentSpecificQuantity}`);
+               newUserDataState[keyToUpdate] = currentSpecificQuantity + 1;
+               console.log(`>>> [CLASSIFY LOG] Updated specific quantity for ${keyToUpdate} (user-initiated) in newUserDataState to: ${newUserDataState[keyToUpdate]}`);
+             } else {
+               console.warn(`>>> [CLASSIFY WARN] Could not find category details or quantityKey for user-initiated category: ${categoryUserInitiatedWith}. No specific quantity updated.`);
+             }
+           } else {
+             console.warn(`>>> [CLASSIFY WARN] No user-initiated category to fall back on for quantity update.`);
+           }
         }
-
-        // If a user initiated the process by clicking a category (e.g., "Cardboard"),
-        // AND that category is DIFFERENT from what the AI determined,
-        // we might still want to increment the user-intended category if business logic dictates.
-        // However, the primary update should be driven by the AI's specific classification.
-        // For now, we rely only on aiDeterminedSpecificCategory for the quantity update.
 
         saveToLocalStorage(USER_DATA_KEY, newUserDataState);
         console.log(">>> [CLASSIFY LOG] FINAL newUserDataState for setUserData:", JSON.stringify(newUserDataState, null, 2));
