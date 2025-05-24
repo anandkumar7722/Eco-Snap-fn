@@ -514,7 +514,7 @@ export default function HomePage() {
                      ? currentUploadCategory
                      : 'general';
       return wasteCategoryFiveRTips[tipKey];
-  }, [currentUploadCategory]);
+  }, [currentUploadCategory, wasteCategoryFiveRTips]); // Added wasteCategoryFiveRTips to dependency array
 
   const SelectedCategoryIcon = useMemo(() => selectedCategoryTips?.icon || HelpCircle, [selectedCategoryTips]);
 
@@ -859,4 +859,4 @@ export default function HomePage() {
   );
 }
 
-
+    
