@@ -174,7 +174,7 @@ const defaultUserProfile: UserProfile = {
   totalPaper: 0,
   totalGlass: 0,
   totalMetal: 0,
-  totalOrganic: 0, // Note: AI model uses 'biowaste'. 'organic' might be redundant or for future use.
+  totalOrganic: 0, 
   totalOther: 0,
   totalPlasticOther: 0,
   totalPlasticPete: 0,
@@ -303,7 +303,6 @@ export default function HomePage() {
             displayName: displayName,
             email: userEmail || '',
             avatar: `https://placehold.co/100x100.png?text=${displayName.substring(0,2).toUpperCase()}`,
-            // Preserve existing stats if the user was already known locally by email
             score: (userEmail && storedUserData.email === userEmail) ? storedUserData.score : 0,
             co2Managed: (userEmail && storedUserData.email === userEmail) ? storedUserData.co2Managed : 0,
             itemsClassified: (userEmail && storedUserData.email === userEmail) ? storedUserData.itemsClassified : 0,
@@ -359,7 +358,6 @@ export default function HomePage() {
     };
   }, []);
 
-  // Debug: Log userData whenever it changes
   useEffect(() => {
     console.log(">>> [DEBUG] userData state changed:", JSON.stringify(userData, null, 2));
   }, [userData]);
@@ -399,14 +397,14 @@ export default function HomePage() {
         return null;
       }
 
-      const aiDeterminedSpecificCategory = aiResult.category; // This is now e.g., 'cardboard', 'plasticPete', etc.
+      const aiDeterminedSpecificCategory = aiResult.category; 
       const classificationConfidence = aiResult.confidence;
       const pointsEarned = WASTE_POINTS[aiDeterminedSpecificCategory] || WASTE_POINTS.other;
 
       const newRecord: ClassificationRecord = {
         id: Date.now().toString(),
         imageDataUri,
-        category: aiDeterminedSpecificCategory, // Log the specific category from AI
+        category: aiDeterminedSpecificCategory, 
         confidence: classificationConfidence,
         timestamp: Date.now(),
         points: pointsEarned,
@@ -426,7 +424,6 @@ export default function HomePage() {
           itemsClassified: prevData.itemsClassified + 1,
         };
 
-        // Now, update the specific quantity based on the AI's determined specific category
         console.log(`>>> [CLASSIFY LOG] AI determined specific category for quantity update: ${aiDeterminedSpecificCategory}`);
         const categoryDetails = verticalLogCategories.find(cat => cat.id === aiDeterminedSpecificCategory);
 
@@ -439,24 +436,7 @@ export default function HomePage() {
           newUserDataState[keyToUpdate] = currentSpecificQuantity + 1;
           console.log(`>>> [CLASSIFY LOG] Updated specific quantity for ${keyToUpdate} in newUserDataState to: ${newUserDataState[keyToUpdate]}`);
         } else {
-           // If the AI category doesn't directly map, try to update based on what the user initially clicked (if available)
-           console.warn(`>>> [CLASSIFY WARN] Could not find category details or quantityKey for AI-determined category: ${aiDeterminedSpecificCategory}.`);
-           if (categoryUserInitiatedWith && categoryUserInitiatedWith !== 'general') {
-             console.log(`>>> [CLASSIFY LOG] Attempting to update specific quantity based on user initiated category: ${categoryUserInitiatedWith}`);
-             const userInitiatedCategoryDetails = verticalLogCategories.find(cat => cat.id === categoryUserInitiatedWith);
-             if (userInitiatedCategoryDetails && userInitiatedCategoryDetails.quantityKey) {
-               const keyToUpdate = userInitiatedCategoryDetails.quantityKey;
-               const currentSpecificQuantity = Number(newUserDataState[keyToUpdate] || 0);
-               console.log(`>>> [CLASSIFY LOG] Found quantityKey for user initiated category '${categoryUserInitiatedWith}': ${keyToUpdate}`);
-               console.log(`>>> [CLASSIFY LOG] Current value for ${keyToUpdate} (user-initiated) in newUserDataState (before increment): ${currentSpecificQuantity}`);
-               newUserDataState[keyToUpdate] = currentSpecificQuantity + 1;
-               console.log(`>>> [CLASSIFY LOG] Updated specific quantity for ${keyToUpdate} (user-initiated) in newUserDataState to: ${newUserDataState[keyToUpdate]}`);
-             } else {
-               console.warn(`>>> [CLASSIFY WARN] Could not find category details or quantityKey for user-initiated category: ${categoryUserInitiatedWith}. No specific quantity updated.`);
-             }
-           } else {
-             console.warn(`>>> [CLASSIFY WARN] No user-initiated category to fall back on for quantity update.`);
-           }
+           console.warn(`>>> [CLASSIFY WARN] Could not find category details or quantityKey for AI-determined category: ${aiDeterminedSpecificCategory}. No specific quantity updated.`);
         }
 
         saveToLocalStorage(USER_DATA_KEY, newUserDataState);
@@ -529,7 +509,7 @@ export default function HomePage() {
                      ? currentUploadCategory
                      : 'general';
       return wasteCategoryFiveRTips[tipKey];
-  }, [currentUploadCategory]);
+  }, [currentUploadCategory, wasteCategoryFiveRTips]); // Added wasteCategoryFiveRTips as dependency
 
   const SelectedCategoryIcon = useMemo(() => selectedCategoryTips?.icon || HelpCircle, [selectedCategoryTips]);
 
