@@ -174,7 +174,7 @@ const defaultUserProfile: UserProfile = {
   totalPaper: 0,
   totalGlass: 0,
   totalMetal: 0,
-  totalOrganic: 0, 
+  totalOrganic: 0,
   totalOther: 0,
   totalPlasticOther: 0,
   totalPlasticPete: 0,
@@ -397,14 +397,14 @@ export default function HomePage() {
         return null;
       }
 
-      const aiDeterminedSpecificCategory = aiResult.category; 
+      const aiDeterminedSpecificCategory = aiResult.category;
       const classificationConfidence = aiResult.confidence;
       const pointsEarned = WASTE_POINTS[aiDeterminedSpecificCategory] || WASTE_POINTS.other;
 
       const newRecord: ClassificationRecord = {
         id: Date.now().toString(),
         imageDataUri,
-        category: aiDeterminedSpecificCategory, 
+        category: aiDeterminedSpecificCategory,
         confidence: classificationConfidence,
         timestamp: Date.now(),
         points: pointsEarned,
@@ -439,10 +439,6 @@ export default function HomePage() {
            console.warn(`>>> [CLASSIFY WARN] Could not find category details or quantityKey for AI-determined category: ${aiDeterminedSpecificCategory}. No specific quantity updated.`);
         }
 
-        // If a specific category was initiated by the user (e.g., they clicked "Cardboard"),
-        // ensure that specific count is also incremented, regardless of AI's output,
-        // if AI's output isn't the same as user-initiated, for manual log feel.
-        // However, our current AI model is now the primary source for specific category.
         if (categoryUserInitiatedWith && categoryUserInitiatedWith !== 'general' && categoryUserInitiatedWith !== aiDeterminedSpecificCategory) {
           console.log(`>>> [CLASSIFY LOG] User initiated with '${categoryUserInitiatedWith}', AI determined '${aiDeterminedSpecificCategory}'. AI category takes precedence for quantity update.`);
         }
@@ -518,7 +514,7 @@ export default function HomePage() {
                      ? currentUploadCategory
                      : 'general';
       return wasteCategoryFiveRTips[tipKey];
-  }, [currentUploadCategory]); 
+  }, [currentUploadCategory, wasteCategoryFiveRTips]);
 
   const SelectedCategoryIcon = useMemo(() => selectedCategoryTips?.icon || HelpCircle, [selectedCategoryTips]);
 
@@ -668,7 +664,7 @@ export default function HomePage() {
                 />
               </div>
             </div>
-            <div className={cn("mt-2 sm:mt-4 w-[80%]")}>
+            <div className={cn("mt-2 sm:mt-4 w-[80%] mx-auto")}>
                  <Progress
                     value={scorePercentage}
                     className={cn(
