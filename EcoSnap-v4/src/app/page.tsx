@@ -576,15 +576,15 @@ export default function HomePage() {
                 <DialogTrigger asChild>
                   <Card
                     onClick={() => openUploadModalForCategory(category.id, category.name)}
-                    className="p-2 sm:p-2 md:p-3 flex flex-col items-center gap-1.5 sm:gap-1.5 md:gap-2 cursor-pointer hover:bg-muted/50 transition-colors shadow-sm w-[85px] sm:w-[100px] md:w-[120px] flex-shrink-0"
+                    className="p-2 sm:p-2 md:p-3 flex flex-col items-center gap-1.5 sm:gap-1.5 md:gap-2 cursor-pointer hover:bg-muted/50 transition-colors shadow-sm w-[85px] sm:w-[100px] md:w-[130px] flex-shrink-0"
                   >
                      <ImageWithFallback
                         src={category.imageUrl}
                         alt={category.name}
                         dataAiHint={category.dataAiHint}
                         placeholderSize="48x48"
-                        sizes="(max-width: 639px) 40px, (max-width: 767px) 48px, 56px"
-                        wrapperClassName="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-md overflow-hidden bg-muted flex-shrink-0 flex items-center justify-center"
+                        sizes="(max-width: 639px) 40px, (max-width: 767px) 48px, 64px"
+                        wrapperClassName="relative w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-md overflow-hidden bg-muted flex-shrink-0 flex items-center justify-center"
                         className="rounded-md object-contain"
                         icon={CategoryIconComponent ? CategoryIconComponent : undefined}
                       />
@@ -668,7 +668,7 @@ export default function HomePage() {
                 />
               </div>
             </div>
-            <div className={cn("mt-2 sm:mt-4 w-[80%] mx-auto")}>
+            <div className={cn("mt-2 sm:mt-4 w-[80%]")}>
                  <Progress
                     value={scorePercentage}
                     className={cn(
@@ -862,3 +862,4 @@ export default function HomePage() {
     </div>
   );
 }
+
