@@ -514,7 +514,7 @@ export default function HomePage() {
                      ? currentUploadCategory
                      : 'general';
       return wasteCategoryFiveRTips[tipKey];
-  }, [currentUploadCategory, wasteCategoryFiveRTips]);
+  }, [currentUploadCategory]);
 
   const SelectedCategoryIcon = useMemo(() => selectedCategoryTips?.icon || HelpCircle, [selectedCategoryTips]);
 
@@ -670,7 +670,7 @@ export default function HomePage() {
                     className={cn(
                         currentLevel.progressBarTrackColor,
                         `[&>div]:${currentLevel.progressBarIndicatorColor}`,
-                        "h-3 sm:h-4"
+                        "h-3 sm:h-4", "m-2.5"
                     )}
                     aria-label={`${currentLevel.name} level progress ${scorePercentage.toFixed(0)}%`}
                 />
@@ -858,4 +858,5 @@ export default function HomePage() {
     </div>
   );
 }
+
 
