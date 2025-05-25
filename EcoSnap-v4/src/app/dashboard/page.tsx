@@ -189,13 +189,13 @@ export default function DetailedDashboardPage() {
   useEffect(() => {
     setIsLoading(true);
     setFirestoreDataError(null);
-    const userId = 'user1';
+    const userId = 'user1'; // Replace with actual user ID from auth
 
     if (!firestore || Object.keys(firestore).length === 0) {
         const msg = "Firebase Firestore is not initialized. Please check your Firebase setup and environment variables.";
         setFirestoreDataError(msg);
         setIsLoading(false);
-        setLiveWasteData([]);
+        setLiveWasteData([]); // Ensure data is cleared if Firestore is not available
         return;
     }
     if (!userId) {
@@ -684,7 +684,7 @@ export default function DetailedDashboardPage() {
                     outerRadius={eWastePieOuterRadius} 
                     labelLine={false}
                     label={({ name, percent, ...entry }) => {
-                        if (percent * 100 < (isMobileView ? 6 : 4)) return ''; // Adjusted threshold
+                        if (percent * 100 < (isMobileView ? 5 : 3)) return ''; // Adjusted threshold
                         return `${(percent * 100).toFixed(0)}%`;
                     }}
                   >
