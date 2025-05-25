@@ -376,7 +376,7 @@ export default function DetailedDashboardPage() {
   }, [categoryDistribution]);
 
   const generalPieOuterRadius = isMobileView ? 60 : 80;
-  const eWastePieOuterRadius = isMobileView ? 65 : 90;
+  const eWastePieOuterRadius = isMobileView ? 75 : 90;
 
 
   const renderPieLabel = ({ name, percent, x, y, midAngle, outerRadius: currentOuterRadius }: any) => {
@@ -672,7 +672,7 @@ export default function DetailedDashboardPage() {
           </CardHeader>
           <CardContent className="p-2 sm:p-3 md:p-4"> {/* Updated Padding */}
             {eWasteDistributionData.length > 0 ? (
-              <ChartContainer config={eWastePieChartConfig} className="mx-auto aspect-square min-h-[180px] max-h-[180px] sm:min-h-[220px] sm:max-h-[220px] md:min-h-[250px] md:max-h-[250px]"> {/* Adjusted Height */}
+              <ChartContainer config={eWastePieChartConfig} className="mx-auto aspect-square min-h-[200px] max-h-[200px] sm:min-h-[220px] sm:max-h-[220px] md:min-h-[250px] md:max-h-[250px]"> {/* Adjusted Height for mobile and desktop */}
                 <RechartsPieChart>
                   <RechartsTooltip content={<ChartTooltipContent nameKey="name" />} />
                   <Pie
@@ -699,7 +699,7 @@ export default function DetailedDashboardPage() {
                             id: entry.name,
                             color: entry.fill
                         }))}
-                        hideIcon={true} // Ensure only colored squares are shown
+                        hideIcon={true}
                     />}
                   />
                 </RechartsPieChart>
