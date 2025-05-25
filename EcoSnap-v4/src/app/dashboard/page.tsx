@@ -7,7 +7,7 @@ import {
     BarChart as BarChartIconGeneral, PieChart as PieChartIconLucideGeneral, Info, Edit, Filter, CalendarDays as CalendarIcon,
     Loader2, LineChart as LineChartIcon, PieChart as PieChartIconLucideEWaste, BarChart as BarChartIconEWaste,
     Clock, Server, Smartphone, Laptop, Battery as BatteryIcon, Package as EWastePackageIcon, WifiOff, AlertCircleIcon, CheckCircle2Icon, TrashIcon,
-    BatteryWarning, Box, CircleGauge, BatteryFull, PackageCheck, PackageX, Trash2 as Trash2Icon // Renamed Trash2 to avoid conflict
+    BatteryWarning, Box, CircleGauge, BatteryFull, PackageCheck, PackageX, Trash2 as Trash2Icon
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -681,10 +681,10 @@ export default function DetailedDashboardPage() {
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={eWastePieOuterRadius} // Value is responsive: isMobileView ? 65 : 90
+                    outerRadius={eWastePieOuterRadius} 
                     labelLine={false}
                     label={({ name, percent, ...entry }) => {
-                        if (percent * 100 < (isMobileView ? 12 : 7)) return '';
+                        if (percent * 100 < (isMobileView ? 6 : 4)) return ''; // Adjusted threshold
                         return `${(percent * 100).toFixed(0)}%`;
                     }}
                   >
@@ -695,14 +695,14 @@ export default function DetailedDashboardPage() {
                   <RechartsLegend
                     content={<ChartLegendContent
                         nameKey="name"
-                        className="text-[8px] sm:text-[9px] [&>div]:gap-0.5 [&>div>svg]:size-2 mt-0 sm:mt-0.5" // Smaller legend
+                        className="text-[8px] sm:text-[9px] [&>div]:gap-0.5 [&>div>svg]:size-2 mt-0 sm:mt-0.5" 
                         payload={eWasteDistributionData.map(entry => ({
                             value: entry.name,
                             type: 'square',
                             id: entry.name,
-                            color: entry.fill,
-                            payload: { icon: eWasteCategoryConfig[Object.keys(eWasteCategoryConfig).find(k => eWasteCategoryConfig[k as EWasteType | 'others'].label === entry.name) as EWasteType | 'others']?.icon }
+                            color: entry.fill
                         }))}
+                        hideIcon={true} // Ensure only colored squares are shown
                     />}
                   />
                 </RechartsPieChart>
