@@ -376,7 +376,7 @@ export default function DetailedDashboardPage() {
   }, [categoryDistribution]);
 
   const generalPieOuterRadius = isMobileView ? 60 : 80;
-  const eWastePieOuterRadius = isMobileView ? 75 : 90;
+  const eWastePieOuterRadius = isMobileView ? 70 : 85; // Adjusted desktop
 
 
   const renderPieLabel = ({ name, percent, x, y, midAngle, outerRadius: currentOuterRadius }: any) => {
@@ -683,7 +683,11 @@ export default function DetailedDashboardPage() {
                     cy="50%"
                     outerRadius={eWastePieOuterRadius} 
                     labelLine={false}
-                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                    label={{
+                        fontSize: isMobileView ? '9px' : '11px',
+                        fill: '#FFFFFF', // Explicitly white labels
+                        formatter: (value: number, entry: any) => `${(entry.payload.percent * 100).toFixed(0)}%`,
+                      }}
                   >
                     {eWasteDistributionData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} stroke={entry.fill} />
