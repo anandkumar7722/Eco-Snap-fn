@@ -683,10 +683,7 @@ export default function DetailedDashboardPage() {
                     cy="50%"
                     outerRadius={eWastePieOuterRadius} 
                     labelLine={false}
-                    label={({ name, percent, ...entry }) => {
-                        if (percent * 100 < (isMobileView ? 5 : 3)) return ''; // Adjusted threshold
-                        return `${(percent * 100).toFixed(0)}%`;
-                    }}
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                   >
                     {eWasteDistributionData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} stroke={entry.fill} />
