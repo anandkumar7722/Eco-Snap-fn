@@ -376,7 +376,7 @@ export default function DetailedDashboardPage() {
   }, [categoryDistribution]);
 
   const generalPieOuterRadius = isMobileView ? 60 : 80;
-  const eWastePieOuterRadius = isMobileView ? 70 : 85; // Adjusted desktop
+  const eWastePieOuterRadius = isMobileView ? 68 : 85; // Adjusted mobile radius
 
 
   const renderPieLabel = ({ name, percent, x, y, midAngle, outerRadius: currentOuterRadius }: any) => {
@@ -672,19 +672,19 @@ export default function DetailedDashboardPage() {
           </CardHeader>
           <CardContent className="p-3 sm:p-4 md:p-4"> {/* Updated Padding */}
             {eWasteDistributionData.length > 0 ? (
-              <ChartContainer config={eWastePieChartConfig} className="mx-auto aspect-square min-h-[200px] max-h-[200px] sm:min-h-[220px] sm:max-h-[220px] md:min-h-[250px] md:max-h-[250px]"> {/* Adjusted Height for mobile and desktop */}
+              <ChartContainer config={eWastePieChartConfig} className="mx-auto aspect-square min-h-[220px] max-h-[220px] sm:min-h-[220px] sm:max-h-[220px] md:min-h-[250px] md:max-h-[250px]"> {/* Increased mobile height */}
                 <RechartsPieChart>
-                  <RechartsTooltip content={<ChartTooltipContent nameKey="name" />} />
+                  <RechartsTooltip content={<ChartTooltipContent nameKey="name" hideIndicator />} /> {/* Added hideIndicator */}
                   <Pie
                     data={eWasteDistributionData}
                     dataKey="value"
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={eWastePieOuterRadius} 
-                    labelLine={false}
+                    outerRadius={isMobileView ? 68 : 85} // Slightly reduced mobile radius
+                    labelLine={false} // Ensure labels are inside
                     label={{
-                        fontSize: isMobileView ? '9px' : '11px',
+                        fontSize: isMobileView ? '8px' : '10px', // Reduced font size
                         fill: '#FFFFFF', // Explicitly white labels
                         formatter: (value: number, entry: any) => `${(entry.payload.percent * 100).toFixed(0)}%`,
                       }}
