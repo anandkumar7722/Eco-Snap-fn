@@ -670,7 +670,7 @@ export default function DetailedDashboardPage() {
             </CardTitle>
             <CardDescription className="text-xs">Proportion of e-waste types (simulated).</CardDescription>
           </CardHeader>
-          <CardContent className="p-2 sm:p-3 md:p-4"> {/* Updated Padding */}
+          <CardContent className="p-3 sm:p-4 md:p-4"> {/* Updated Padding */}
             {eWasteDistributionData.length > 0 ? (
               <ChartContainer config={eWastePieChartConfig} className="mx-auto aspect-square min-h-[200px] max-h-[200px] sm:min-h-[220px] sm:max-h-[220px] md:min-h-[250px] md:max-h-[250px]"> {/* Adjusted Height for mobile and desktop */}
                 <RechartsPieChart>
@@ -692,7 +692,7 @@ export default function DetailedDashboardPage() {
                   <RechartsLegend
                     content={<ChartLegendContent
                         nameKey="name"
-                        className="text-[8px] sm:text-[9px] [&>div]:gap-0.5 [&>div>svg]:size-2 mt-0 sm:mt-0.5" 
+                        className="text-[9px] sm:text-[10px] [&>div]:gap-1 [&>div>svg]:size-2.5 mt-1 sm:mt-1.5" 
                         payload={eWasteDistributionData.map(entry => ({
                             value: entry.name,
                             type: 'square',
