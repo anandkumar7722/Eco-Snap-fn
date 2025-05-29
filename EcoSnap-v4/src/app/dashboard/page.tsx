@@ -114,14 +114,16 @@ export default function DetailedDashboardPage() {
   const [bin1HistoryError, setBin1HistoryError] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobileView(window.innerWidth < 768);
     if (typeof window !== 'undefined') {
+        const checkMobile = () => setIsMobileView(window.innerWidth < 768);
         checkMobile();
         window.addEventListener('resize', checkMobile);
+        
         setDateRange({
             from: addDays(new Date(), -90),
             to: new Date(),
         });
+        
         setCurrentTime(new Date());
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
         
@@ -276,10 +278,10 @@ export default function DetailedDashboardPage() {
   useEffect(() => {
     setIsLoadingBin1History(true);
     setBin1HistoryError(null);
-    console.log(">>> [Dashboard - Bin1 History] useEffect triggered.");
+    console.log(">>> [Dashboard - Bin1 History] useEffect triggered for /bin1 listener.");
 
     if (!database || Object.keys(database).length === 0) {
-      const errorMsg = "Firebase Realtime Database is not initialized for Bin1 history. Please check your Firebase setup and environment variables.";
+      const errorMsg = "Firebase Realtime Database is not initialized for Bin1 data. Please check your Firebase setup and environment variables.";
       console.error(">>> [Dashboard - Bin1 History] Error:", errorMsg);
       setBin1HistoryError(errorMsg);
       setIsLoadingBin1History(false);
@@ -287,62 +289,63 @@ export default function DetailedDashboardPage() {
       return;
     }
 
-    const bin1HistoryRef = ref(database, 'bin1/fill_level_history');
-    console.log(">>> [Dashboard - Bin1 History] Setting up listener for path:", bin1HistoryRef.toString());
+    const bin1NodeRef = ref(database, 'bin1'); // Listen to the parent /bin1 node
+    console.log(">>> [Dashboard - Bin1 History] Setting up listener for path:", bin1NodeRef.toString());
 
-    const listener = onValue(bin1HistoryRef, (snapshot) => {
-      const data = snapshot.val();
-      console.log(">>> [Dashboard - Bin1 History] Raw data received from Firebase:", JSON.stringify(data, null, 2));
+    const listener = onValue(bin1NodeRef, (snapshot) => {
+      const bin1NodeData = snapshot.val();
+      console.log(">>> [Dashboard - Bin1 History] Raw data received from Firebase for /bin1:", JSON.stringify(bin1NodeData, null, 2));
 
-      if (Array.isArray(data)) {
-        console.log(">>> [Dashboard - Bin1 History] Data is an array. Length:", data.length);
-        if (data.length === 0) {
-          console.log(">>> [Dashboard - Bin1 History] Received empty array. Setting history to empty.");
+      if (bin1NodeData && bin1NodeData.fill_level_history && Array.isArray(bin1NodeData.fill_level_history)) {
+        const rawHistory = bin1NodeData.fill_level_history;
+        const fillLevelHistoryIndex = bin1NodeData.fill_level_history_index;
+        console.log(">>> [Dashboard - Bin1 History] Data is an array. Length:", rawHistory.length, "Index:", fillLevelHistoryIndex);
+        
+        if (rawHistory.length === 0) {
+          console.log(">>> [Dashboard - Bin1 History] Received empty fill_level_history array. Setting chart data to empty.");
           setBin1HistoryData([]);
         } else {
-          const mappedArray = data.map((item, index) => ({
-            index: index,
-            fill_level: (item && typeof item.fill_level === 'number') ? item.fill_level : null,
+          const filteredHistory = rawHistory.filter(
+            (item: any) => item && typeof item.fill_level === 'number' && item.fill_level > 0
+          );
+          console.log(">>> [Dashboard - Bin1 History] Filtered history (fill_level > 0):", JSON.stringify(filteredHistory, null, 2));
+
+          const chartData = filteredHistory.map((item: any, chartIndex: number) => ({
+            index: chartIndex, // Use new index based on filtered data for chart X-axis
+            fill_level: item.fill_level,
           }));
-          console.log(">>> [Dashboard - Bin1 History] Mapped array (before filter):", JSON.stringify(mappedArray, null, 2));
-          const historyArray = mappedArray.filter(point => point.fill_level !== null) as Bin1FillLevelHistoryPoint[];
-          console.log(">>> [Dashboard - Bin1 History] Processed historyArray from Array (after filter):", JSON.stringify(historyArray, null, 2));
-          setBin1HistoryData(historyArray);
+          
+          console.log(">>> [Dashboard - Bin1 History] Processed chartData from Array:", JSON.stringify(chartData, null, 2));
+          setBin1HistoryData(chartData);
         }
-        setBin1HistoryError(null);
-      } else if (data && typeof data === 'object' && !Array.isArray(data)) {
-        console.log(">>> [Dashboard - Bin1 History] Data is an object (old format?). Processing...");
-        const historyArray: Bin1FillLevelHistoryPoint[] = Object.keys(data)
-          .map(key => ({
-            index: parseInt(key, 10),
-            fill_level: data[key] as number,
-          }))
-          .filter(point => !isNaN(point.index) && typeof point.fill_level === 'number')
-          .sort((a, b) => a.index - b.index);
-        console.log(">>> [Dashboard - Bin1 History] Processed historyArray from Object:", JSON.stringify(historyArray, null, 2));
-        setBin1HistoryData(historyArray);
+        // Log the conceptual "returned object"
+        const processedReturnObject = {
+            fill_level_history: filteredHistory, // Contains original objects with lat/lon etc.
+            fill_level_history_index: fillLevelHistoryIndex
+        };
+        console.log(">>> [Dashboard - Bin1 History] Conceptual processed object with original index:", JSON.stringify(processedReturnObject, null, 2));
         setBin1HistoryError(null);
       } else {
-        if (data === null) {
-          console.log(">>> [Dashboard - Bin1 History] Data received is explicitly null. Setting history to empty.");
-        } else if (data === undefined) {
-          console.log(">>> [Dashboard - Bin1 History] Data received is undefined. Setting history to empty.");
-        } else {
-          console.log(">>> [Dashboard - Bin1 History] Data is not an array or recognized object. Type:", typeof data, "Value:", JSON.stringify(data, null, 2), ". Setting history to empty.");
+        if (!bin1NodeData) {
+            console.log(">>> [Dashboard - Bin1 History] Data for /bin1 is null or undefined.");
+        } else if (!bin1NodeData.fill_level_history) {
+            console.log(">>> [Dashboard - Bin1 History] fill_level_history field is missing in /bin1 data.");
+        } else if (!Array.isArray(bin1NodeData.fill_level_history)) {
+            console.log(">>> [Dashboard - Bin1 History] fill_level_history is not an array. Type:", typeof bin1NodeData.fill_level_history);
         }
         setBin1HistoryData([]);
       }
       setIsLoadingBin1History(false);
     }, (error) => {
-      console.error(">>> [Dashboard - Bin1 History] Error fetching Bin1 fill level history:", error);
-      setBin1HistoryError("Could not load Bin1 fill level history. " + error.message);
+      console.error(">>> [Dashboard - Bin1 History] Error fetching Bin1 data:", error);
+      setBin1HistoryError("Could not load Bin1 data. " + error.message);
       setIsLoadingBin1History(false);
-      toast({ variant: "destructive", title: "Bin1 History Error", description: "Failed to load fill level history for Bin1." });
+      toast({ variant: "destructive", title: "Bin1 History Error", description: "Failed to load data for Bin1." });
     });
 
     return () => {
-      console.log(">>> [Dashboard - Bin1 History] Cleaning up listener for path:", bin1HistoryRef.toString());
-      off(bin1HistoryRef, 'value', listener);
+      console.log(">>> [Dashboard - Bin1 History] Cleaning up listener for path:", bin1NodeRef.toString());
+      off(bin1NodeRef, 'value', listener);
     };
   }, [toast]);
 
@@ -1042,5 +1045,7 @@ export default function DetailedDashboardPage() {
     </div>
   );
 }
+
+    
 
     
