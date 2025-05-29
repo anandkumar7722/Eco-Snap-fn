@@ -283,7 +283,7 @@ export default function DetailedDashboardPage() {
   useEffect(() => {
     setIsLoadingBin1History(true);
     setBin1HistoryError(null);
-    console.log(">>> [Dashboard - Bin1 History] useEffect triggered for /bin1 listener.");
+    console.log(">>> [Dashboard - Bin1 History] useEffect triggered. Listening to /bin_1");
 
     if (!database || Object.keys(database).length === 0) {
       const errorMsg = "Firebase Realtime Database is not initialized for Bin1 data. Please check your Firebase setup and environment variables.";
@@ -294,25 +294,22 @@ export default function DetailedDashboardPage() {
       return;
     }
 
-    const bin1NodeRef = ref(database, 'bin1'); // Listen to the parent /bin1 node
-    console.log(">>> [Dashboard - Bin1 History] Setting up listener for path:", bin1NodeRef.toString());
+    const bin1HistoryDataRef = ref(database, 'bin_1'); // Listen to the /bin_1 node directly
+    console.log(">>> [Dashboard - Bin1 History] Setting up listener for path:", bin1HistoryDataRef.toString());
 
-    const listener = onValue(bin1NodeRef, (snapshot) => {
-      const bin1NodeData = snapshot.val();
-      console.log(">>> [Dashboard - Bin1 History] Raw data received from Firebase for /bin1:", JSON.stringify(bin1NodeData, null, 2));
+    const listener = onValue(bin1HistoryDataRef, (snapshot) => {
+      const rawHistoryArray = snapshot.val(); // Expecting this to be the array itself
+      console.log(">>> [Dashboard - Bin1 History] Raw data received from Firebase for /bin_1:", JSON.stringify(rawHistoryArray, null, 2));
 
-      if (bin1NodeData && bin1NodeData.fill_level_history && Array.isArray(bin1NodeData.fill_level_history)) {
-        const rawHistory = bin1NodeData.fill_level_history as Array<{ fill_level: number, [key: string]: any } | null>;
-        const fillLevelHistoryIndex = bin1NodeData.fill_level_history_index; // Get the index
-        console.log(">>> [Dashboard - Bin1 History] 'fill_level_history' is an array. Length:", rawHistory.length);
-        console.log(">>> [Dashboard - Bin1 History] 'fill_level_history_index':", fillLevelHistoryIndex);
+      if (Array.isArray(rawHistoryArray)) {
+        console.log(">>> [Dashboard - Bin1 History] Data is an array. Length:", rawHistoryArray.length);
         
-        if (rawHistory.length === 0) {
-          console.log(">>> [Dashboard - Bin1 History] Received empty 'fill_level_history' array.");
+        if (rawHistoryArray.length === 0) {
+          console.log(">>> [Dashboard - Bin1 History] Received empty history array.");
           setBin1HistoryData([]);
         } else {
           // Filter out entries where fill_level is 0 or not a valid number
-          const filteredHistory = rawHistory.filter(
+          const filteredHistory = rawHistoryArray.filter(
             (item: any) => item && typeof item.fill_level === 'number' && item.fill_level > 0
           );
           console.log(">>> [Dashboard - Bin1 History] Filtered history (fill_level > 0):", JSON.stringify(filteredHistory, null, 2));
@@ -332,26 +329,26 @@ export default function DetailedDashboardPage() {
         }
         setBin1HistoryError(null);
       } else {
-        if (!bin1NodeData) {
-            console.warn(">>> [Dashboard - Bin1 History] Data for /bin1 is null or undefined.");
-        } else if (!bin1NodeData.fill_level_history) {
-            console.warn(">>> [Dashboard - Bin1 History] 'fill_level_history' field is missing in /bin1 data.");
-        } else if (!Array.isArray(bin1NodeData.fill_level_history)) {
-            console.warn(">>> [Dashboard - Bin1 History] 'fill_level_history' is not an array. Type:", typeof bin1NodeData.fill_level_history);
+        if (rawHistoryArray === null) {
+             console.warn(">>> [Dashboard - Bin1 History] Data for /bin_1 is null. No history to display.");
+        } else if (typeof rawHistoryArray === 'object' && rawHistoryArray !== null) {
+             console.warn(">>> [Dashboard - Bin1 History] Data for /bin_1 is an object but not an array. Expected an array of history entries. Data:", JSON.stringify(rawHistoryArray, null, 2));
+        } else {
+             console.warn(">>> [Dashboard - Bin1 History] Data for /bin_1 is not an array. Type:", typeof rawHistoryArray, "Value:", rawHistoryArray);
         }
-        setBin1HistoryData([]);
+        setBin1HistoryData([]); // Clear data if not an array
       }
       setIsLoadingBin1History(false);
     }, (error) => {
-      console.error(">>> [Dashboard - Bin1 History] Error fetching Bin1 data:", error);
-      setBin1HistoryError("Could not load Bin1 data. " + error.message);
+      console.error(">>> [Dashboard - Bin1 History] Error fetching data from /bin_1:", error);
+      setBin1HistoryError("Could not load Bin1 history data. " + error.message);
       setIsLoadingBin1History(false);
-      toast({ variant: "destructive", title: "Bin1 History Error", description: "Failed to load data for Bin1." });
+      toast({ variant: "destructive", title: "Bin1 History Error", description: "Failed to load data for Bin1 from /bin_1." });
     });
 
     return () => {
-      console.log(">>> [Dashboard - Bin1 History] Cleaning up listener for path:", bin1NodeRef.toString());
-      off(bin1NodeRef, 'value', listener);
+      console.log(">>> [Dashboard - Bin1 History] Cleaning up listener for path:", bin1HistoryDataRef.toString());
+      off(bin1HistoryDataRef, 'value', listener);
     };
   }, [toast]);
 
@@ -504,6 +501,7 @@ export default function DetailedDashboardPage() {
                 mode="range"
                 defaultMonth={dateRange?.from}
                 selected={dateRange}
+                onSelect={setDateRange}
                 numberOfMonths={isMobileView ? 1 : 2}
               />
             </PopoverContent>
@@ -728,7 +726,7 @@ export default function DetailedDashboardPage() {
                     label={{
                         fontSize: isMobileView ? '8px' : '10px', 
                         fill: '#FFFFFF', 
-                        formatter: (value, entry) => `${(entry.payload.percent * 100).toFixed(0)}%`,
+                        formatter: (value: any, entry: any) => `${(entry.payload.percent * 100).toFixed(0)}%`,
                       }}
                   >
                     {eWasteDistributionData.map((entry, index) => (
@@ -994,7 +992,7 @@ export default function DetailedDashboardPage() {
             <Alert className="text-xs sm:text-sm">
                 <PackageX className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <AlertTitle className="text-sm sm:text-base">No History for Bin1</AlertTitle>
-                <AlertDescription>No valid fill level history data found for '/bin1' (after filtering out entries with fill_level 0).</AlertDescription>
+                <AlertDescription>No valid fill level history data found for '/bin_1' (after filtering out entries with fill_level 0).</AlertDescription>
             </Alert>
           ) : (
             <ChartContainer config={{fill_level: {label: "Fill Level (%)", color: "hsl(var(--primary))"}}} className="h-[200px] sm:h-[220px] md:h-[250px] w-full"> {/* Reduced height */}
@@ -1050,7 +1048,3 @@ export default function DetailedDashboardPage() {
     </div>
   );
 }
-
-    
-
-    
