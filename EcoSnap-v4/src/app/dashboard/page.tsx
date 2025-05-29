@@ -1048,3 +1048,4 @@ export default function DetailedDashboardPage() {
     </div>
   );
 }
+
