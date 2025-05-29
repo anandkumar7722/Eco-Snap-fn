@@ -7,7 +7,7 @@ import {
     BarChart as BarChartIconGeneral, PieChart as PieChartIconLucideGeneral, Info, Edit, Filter, CalendarDays as CalendarIcon,
     Loader2, LineChart as LineChartIcon, PieChart as PieChartIconLucideEWaste, BarChart as BarChartIconEWaste,
     Clock, Server, Smartphone, Laptop, Battery as BatteryIcon, Package as EWastePackageIcon, WifiOff, AlertCircleIcon, CheckCircle2Icon, TrashIcon,
-    BatteryWarning, Box, CircleGauge, BatteryFull, PackageCheck, PackageX, Trash2 as Trash2Icon
+    BatteryWarning, Box, CircleGauge, BatteryFull, PackageCheck, PackageX, Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -276,27 +276,39 @@ export default function DetailedDashboardPage() {
   useEffect(() => {
     setIsLoadingBin1History(true);
     setBin1HistoryError(null);
+    console.log(">>> [Dashboard - Bin1 History] useEffect triggered.");
+
     if (!database || Object.keys(database).length === 0) {
-      setBin1HistoryError("Firebase Realtime Database is not initialized for Bin1 history. Please check your Firebase setup and environment variables.");
+      const errorMsg = "Firebase Realtime Database is not initialized for Bin1 history. Please check your Firebase setup and environment variables.";
+      console.error(">>> [Dashboard - Bin1 History] Error:", errorMsg);
+      setBin1HistoryError(errorMsg);
       setIsLoadingBin1History(false);
       setBin1HistoryData([]);
       return;
     }
 
     const bin1HistoryRef = ref(database, 'bin1/fill_level_history');
+    console.log(">>> [Dashboard - Bin1 History] Setting up listener for path:", bin1HistoryRef.toString());
+
     const listener = onValue(bin1HistoryRef, (snapshot) => {
       const data = snapshot.val();
       console.log(">>> [Dashboard - Bin1 History] Raw data received from Firebase:", JSON.stringify(data, null, 2));
 
       if (Array.isArray(data)) {
-        console.log(">>> [Dashboard - Bin1 History] Data is an array. Processing...");
-        const mappedArray = data.map((item, index) => ({
-          index: index,
-          fill_level: (item && typeof item.fill_level === 'number') ? item.fill_level : null,
-        }));
-        const historyArray = mappedArray.filter(point => point.fill_level !== null) as Bin1FillLevelHistoryPoint[];
-        console.log(">>> [Dashboard - Bin1 History] Processed historyArray from Array:", JSON.stringify(historyArray, null, 2));
-        setBin1HistoryData(historyArray);
+        console.log(">>> [Dashboard - Bin1 History] Data is an array. Length:", data.length);
+        if (data.length === 0) {
+          console.log(">>> [Dashboard - Bin1 History] Received empty array. Setting history to empty.");
+          setBin1HistoryData([]);
+        } else {
+          const mappedArray = data.map((item, index) => ({
+            index: index,
+            fill_level: (item && typeof item.fill_level === 'number') ? item.fill_level : null,
+          }));
+          console.log(">>> [Dashboard - Bin1 History] Mapped array (before filter):", JSON.stringify(mappedArray, null, 2));
+          const historyArray = mappedArray.filter(point => point.fill_level !== null) as Bin1FillLevelHistoryPoint[];
+          console.log(">>> [Dashboard - Bin1 History] Processed historyArray from Array (after filter):", JSON.stringify(historyArray, null, 2));
+          setBin1HistoryData(historyArray);
+        }
         setBin1HistoryError(null);
       } else if (data && typeof data === 'object' && !Array.isArray(data)) {
         console.log(">>> [Dashboard - Bin1 History] Data is an object (old format?). Processing...");
@@ -313,19 +325,22 @@ export default function DetailedDashboardPage() {
       } else {
         console.log(">>> [Dashboard - Bin1 History] Data is not an array or object, or is null/undefined. Setting history to empty.");
         setBin1HistoryData([]);
+        // Optionally, set an error if data is unexpectedly null after an initial load.
+        // if (data === null && !isLoadingBin1History) setBin1HistoryError("No data found at 'bin1/fill_level_history'.");
       }
       setIsLoadingBin1History(false);
     }, (error) => {
-      console.error("Error fetching Bin1 fill level history:", error);
+      console.error(">>> [Dashboard - Bin1 History] Error fetching Bin1 fill level history:", error);
       setBin1HistoryError("Could not load Bin1 fill level history. " + error.message);
       setIsLoadingBin1History(false);
       toast({ variant: "destructive", title: "Bin1 History Error", description: "Failed to load fill level history for Bin1." });
     });
 
     return () => {
+      console.log(">>> [Dashboard - Bin1 History] Cleaning up listener for path:", bin1HistoryRef.toString());
       off(bin1HistoryRef, 'value', listener);
     };
-  }, [toast]);
+  }, [toast]); // Removed isLoadingBin1History from dependency array to prevent re-triggering listener setup on loading state change
 
 
   useEffect(() => {
@@ -701,7 +716,7 @@ export default function DetailedDashboardPage() {
                     label={{
                         fontSize: isMobileView ? '8px' : '10px', 
                         fill: '#FFFFFF', 
-                        formatter: (value: number, entry: any) => `${(entry.payload.percent * 100).toFixed(0)}%`,
+                        formatter: (value, entry) => `${(entry.payload.percent * 100).toFixed(0)}%`,
                       }}
                   >
                     {eWasteDistributionData.map((entry, index) => (
@@ -773,7 +788,7 @@ export default function DetailedDashboardPage() {
       <Card className="mt-4 sm:mt-6 shadow-lg">
         <CardHeader className="pb-2 sm:pb-3">
           <CardTitle className="flex items-center gap-2 text-base font-semibold text-primary sm:text-lg">
-            <Trash2Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+            <Trash2 className="h-5 w-5 sm:h-6 sm:w-6" />
             General Smart Bin Monitoring
           </CardTitle>
           <CardDescription className="text-xs">
@@ -807,7 +822,7 @@ export default function DetailedDashboardPage() {
                 <Card className="shadow-sm">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                     <CardTitle className="text-xs font-medium">Full / Needs Attention</CardTitle>
-                    <Trash2Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
+                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
                   </CardHeader>
                   <CardContent className="p-2">
                     <div className="text-lg sm:text-xl font-bold">{fullSmartBins}</div>
@@ -878,7 +893,7 @@ export default function DetailedDashboardPage() {
                         <div className="flex flex-col sm:flex-row justify-between items-start gap-1 sm:gap-2">
                             <div className="flex-grow">
                             <h4 className={cn("font-semibold text-sm flex items-center gap-1.5", statusColorClass)}>
-                                <Trash2Icon className="h-4 w-4 shrink-0" /> {/* Using Trash2Icon here */}
+                                <Trash2 className="h-4 w-4 shrink-0" /> {/* Using Trash2Icon here */}
                                 <span className="truncate" title={`Bin ID: ${bin.id}`}>Bin: {bin.id}</span>
                             </h4>
                             {bin.location && (
@@ -1023,3 +1038,5 @@ export default function DetailedDashboardPage() {
     </div>
   );
 }
+
+    
