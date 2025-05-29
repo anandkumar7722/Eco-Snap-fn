@@ -323,10 +323,14 @@ export default function DetailedDashboardPage() {
         setBin1HistoryData(historyArray);
         setBin1HistoryError(null);
       } else {
-        console.log(">>> [Dashboard - Bin1 History] Data is not an array or object, or is null/undefined. Setting history to empty.");
+        if (data === null) {
+          console.log(">>> [Dashboard - Bin1 History] Data received is explicitly null. Setting history to empty.");
+        } else if (data === undefined) {
+          console.log(">>> [Dashboard - Bin1 History] Data received is undefined. Setting history to empty.");
+        } else {
+          console.log(">>> [Dashboard - Bin1 History] Data is not an array or recognized object. Type:", typeof data, "Value:", JSON.stringify(data, null, 2), ". Setting history to empty.");
+        }
         setBin1HistoryData([]);
-        // Optionally, set an error if data is unexpectedly null after an initial load.
-        // if (data === null && !isLoadingBin1History) setBin1HistoryError("No data found at 'bin1/fill_level_history'.");
       }
       setIsLoadingBin1History(false);
     }, (error) => {
@@ -340,7 +344,7 @@ export default function DetailedDashboardPage() {
       console.log(">>> [Dashboard - Bin1 History] Cleaning up listener for path:", bin1HistoryRef.toString());
       off(bin1HistoryRef, 'value', listener);
     };
-  }, [toast]); // Removed isLoadingBin1History from dependency array to prevent re-triggering listener setup on loading state change
+  }, [toast]);
 
 
   useEffect(() => {
