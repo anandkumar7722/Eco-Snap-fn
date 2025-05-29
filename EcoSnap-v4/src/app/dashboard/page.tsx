@@ -989,7 +989,7 @@ export default function DetailedDashboardPage() {
               <AlertDescription>{bin1HistoryError}</AlertDescription>
             </Alert>
           ) : bin1HistoryData.length === 0 ? (
-            <Alert className="text-xs sm:text-sm">
+             <Alert className="text-xs sm:text-sm">
                 <PackageX className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <AlertTitle className="text-sm sm:text-base">No History for Bin1</AlertTitle>
                 <AlertDescription>No valid fill level history data found for '/bin_1' (after filtering out entries with fill_level 0).</AlertDescription>
@@ -1048,4 +1048,3 @@ export default function DetailedDashboardPage() {
     </div>
   );
 }
-
