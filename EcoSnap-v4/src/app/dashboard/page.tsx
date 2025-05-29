@@ -114,24 +114,25 @@ export default function DetailedDashboardPage() {
   const [bin1HistoryError, setBin1HistoryError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-        const checkMobile = () => setIsMobileView(window.innerWidth < 768);
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        
-        setDateRange({
-            from: addDays(new Date(), -90),
-            to: new Date(),
-        });
-        
-        setCurrentTime(new Date());
-        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-        
-        return () => {
-            window.removeEventListener('resize', checkMobile);
-            clearInterval(timer);
-        };
-    }
+    // This effect should only run on the client
+    const checkMobile = () => setIsMobileView(window.innerWidth < 768);
+    checkMobile(); // Initial check
+    window.addEventListener('resize', checkMobile);
+
+    // Initialize dateRange on client
+    setDateRange({
+        from: addDays(new Date(), -90),
+        to: new Date(),
+    });
+
+    // Initialize currentTime on client
+    setCurrentTime(new Date());
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    
+    return () => {
+        window.removeEventListener('resize', checkMobile);
+        clearInterval(timer);
+    };
   }, []);
 
 
@@ -195,6 +196,7 @@ export default function DetailedDashboardPage() {
 
     if (!firestore || Object.keys(firestore).length === 0) {
         const msg = "Firebase Firestore is not initialized. Please check your Firebase setup and environment variables.";
+        console.error(">>> [Dashboard - Firestore] Error:", msg);
         setFirestoreDataError(msg);
         setIsLoading(false);
         setLiveWasteData([]); 
@@ -202,6 +204,7 @@ export default function DetailedDashboardPage() {
     }
     if (!userId) {
         const msg = "User ID not available. Cannot fetch waste data.";
+        console.error(">>> [Dashboard - Firestore] Error:", msg);
         setFirestoreDataError(msg);
         setIsLoading(false);
         setLiveWasteData([]);
@@ -229,7 +232,7 @@ export default function DetailedDashboardPage() {
       setIsLoading(false);
       setFirestoreDataError(null);
     }, (error) => {
-      console.error("Error fetching real-time waste entries:", error);
+      console.error(">>> [Dashboard - Firestore] Error fetching real-time waste entries:", error);
       const errorMsg = "Could not load live waste data. There might be a connection issue with the database or insufficient permissions. Please check your internet connection and Firebase setup.";
       setFirestoreDataError(errorMsg);
       toast({ variant: "destructive", title: "Data Fetch Error", description: errorMsg, duration: 10000 });
@@ -243,7 +246,9 @@ export default function DetailedDashboardPage() {
     setIsLoadingSmartBins(true);
     setSmartBinsError(null);
     if (!database || Object.keys(database).length === 0) {
-      setSmartBinsError("Firebase Realtime Database is not initialized. Please check your Firebase setup and environment variables.");
+      const errorMsg = "Firebase Realtime Database is not initialized. Please check your Firebase setup and environment variables.";
+      console.error(">>> [Dashboard - SmartBins] Error:", errorMsg);
+      setSmartBinsError(errorMsg);
       setIsLoadingSmartBins(false);
       setSmartBinsData([]);
       return;
@@ -264,7 +269,7 @@ export default function DetailedDashboardPage() {
       }
       setIsLoadingSmartBins(false);
     }, (error) => {
-      console.error("Error fetching smart bins data:", error);
+      console.error(">>> [Dashboard - SmartBins] Error fetching smart bins data:", error);
       setSmartBinsError("Could not load smart bin data. " + error.message);
       setIsLoadingSmartBins(false);
       toast({ variant: "destructive", title: "Smart Bin Error", description: "Failed to load data from Realtime Database." });
@@ -298,11 +303,10 @@ export default function DetailedDashboardPage() {
 
       if (bin1NodeData && bin1NodeData.fill_level_history && Array.isArray(bin1NodeData.fill_level_history)) {
         const rawHistory = bin1NodeData.fill_level_history;
-        const fillLevelHistoryIndex = bin1NodeData.fill_level_history_index;
-        console.log(">>> [Dashboard - Bin1 History] Data is an array. Length:", rawHistory.length, "Index:", fillLevelHistoryIndex);
+        console.log(">>> [Dashboard - Bin1 History] 'fill_level_history' is an array. Length:", rawHistory.length);
         
         if (rawHistory.length === 0) {
-          console.log(">>> [Dashboard - Bin1 History] Received empty fill_level_history array. Setting chart data to empty.");
+          console.log(">>> [Dashboard - Bin1 History] Received empty 'fill_level_history' array.");
           setBin1HistoryData([]);
         } else {
           const filteredHistory = rawHistory.filter(
@@ -310,28 +314,26 @@ export default function DetailedDashboardPage() {
           );
           console.log(">>> [Dashboard - Bin1 History] Filtered history (fill_level > 0):", JSON.stringify(filteredHistory, null, 2));
 
-          const chartData = filteredHistory.map((item: any, chartIndex: number) => ({
-            index: chartIndex, // Use new index based on filtered data for chart X-axis
-            fill_level: item.fill_level,
-          }));
-          
-          console.log(">>> [Dashboard - Bin1 History] Processed chartData from Array:", JSON.stringify(chartData, null, 2));
-          setBin1HistoryData(chartData);
+          if (filteredHistory.length === 0) {
+            console.log(">>> [Dashboard - Bin1 History] Filtered history is empty (all items had fill_level 0 or were invalid).");
+            setBin1HistoryData([]);
+          } else {
+            const chartData = filteredHistory.map((item: any, chartIndex: number) => ({
+              index: chartIndex, 
+              fill_level: item.fill_level,
+            }));
+            console.log(">>> [Dashboard - Bin1 History] Mapped chartData for plotting:", JSON.stringify(chartData, null, 2));
+            setBin1HistoryData(chartData);
+          }
         }
-        // Log the conceptual "returned object"
-        const processedReturnObject = {
-            fill_level_history: filteredHistory, // Contains original objects with lat/lon etc.
-            fill_level_history_index: fillLevelHistoryIndex
-        };
-        console.log(">>> [Dashboard - Bin1 History] Conceptual processed object with original index:", JSON.stringify(processedReturnObject, null, 2));
         setBin1HistoryError(null);
       } else {
         if (!bin1NodeData) {
-            console.log(">>> [Dashboard - Bin1 History] Data for /bin1 is null or undefined.");
+            console.warn(">>> [Dashboard - Bin1 History] Data for /bin1 is null or undefined.");
         } else if (!bin1NodeData.fill_level_history) {
-            console.log(">>> [Dashboard - Bin1 History] fill_level_history field is missing in /bin1 data.");
+            console.warn(">>> [Dashboard - Bin1 History] 'fill_level_history' field is missing in /bin1 data.");
         } else if (!Array.isArray(bin1NodeData.fill_level_history)) {
-            console.log(">>> [Dashboard - Bin1 History] fill_level_history is not an array. Type:", typeof bin1NodeData.fill_level_history);
+            console.warn(">>> [Dashboard - Bin1 History] 'fill_level_history' is not an array. Type:", typeof bin1NodeData.fill_level_history);
         }
         setBin1HistoryData([]);
       }
@@ -347,7 +349,7 @@ export default function DetailedDashboardPage() {
       console.log(">>> [Dashboard - Bin1 History] Cleaning up listener for path:", bin1NodeRef.toString());
       off(bin1NodeRef, 'value', listener);
     };
-  }, [toast]);
+  }, [toast, database]); // Added database to dependency array
 
 
   useEffect(() => {
@@ -1045,6 +1047,8 @@ export default function DetailedDashboardPage() {
     </div>
   );
 }
+
+    
 
     
 
