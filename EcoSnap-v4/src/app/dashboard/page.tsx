@@ -286,19 +286,20 @@ export default function DetailedDashboardPage() {
     const bin1HistoryRef = ref(database, 'bin1/fill_level_history');
     const listener = onValue(bin1HistoryRef, (snapshot) => {
       const data = snapshot.val();
-      // Check if data is an array (new structure)
-      if (Array.isArray(data)) {
-        const historyArray: Bin1FillLevelHistoryPoint[] = data
-          .map((item, index) => ({
-            index: index, // Use array index for X-axis
-            fill_level: typeof item?.fill_level === 'number' ? item.fill_level : 0, // Ensure fill_level is a number
-          }))
-          .filter(point => typeof point.fill_level === 'number'); // Filter out any malformed points
+      console.log(">>> [Dashboard - Bin1 History] Raw data received from Firebase:", JSON.stringify(data, null, 2));
 
+      if (Array.isArray(data)) {
+        console.log(">>> [Dashboard - Bin1 History] Data is an array. Processing...");
+        const mappedArray = data.map((item, index) => ({
+          index: index,
+          fill_level: (item && typeof item.fill_level === 'number') ? item.fill_level : null,
+        }));
+        const historyArray = mappedArray.filter(point => point.fill_level !== null) as Bin1FillLevelHistoryPoint[];
+        console.log(">>> [Dashboard - Bin1 History] Processed historyArray from Array:", JSON.stringify(historyArray, null, 2));
         setBin1HistoryData(historyArray);
         setBin1HistoryError(null);
       } else if (data && typeof data === 'object' && !Array.isArray(data)) {
-        // Fallback for old object-based structure (can be removed later)
+        console.log(">>> [Dashboard - Bin1 History] Data is an object (old format?). Processing...");
         const historyArray: Bin1FillLevelHistoryPoint[] = Object.keys(data)
           .map(key => ({
             index: parseInt(key, 10),
@@ -306,9 +307,11 @@ export default function DetailedDashboardPage() {
           }))
           .filter(point => !isNaN(point.index) && typeof point.fill_level === 'number')
           .sort((a, b) => a.index - b.index);
+        console.log(">>> [Dashboard - Bin1 History] Processed historyArray from Object:", JSON.stringify(historyArray, null, 2));
         setBin1HistoryData(historyArray);
         setBin1HistoryError(null);
       } else {
+        console.log(">>> [Dashboard - Bin1 History] Data is not an array or object, or is null/undefined. Setting history to empty.");
         setBin1HistoryData([]);
       }
       setIsLoadingBin1History(false);
@@ -1020,4 +1023,3 @@ export default function DetailedDashboardPage() {
     </div>
   );
 }
-
