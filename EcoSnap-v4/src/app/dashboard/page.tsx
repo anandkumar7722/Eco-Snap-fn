@@ -303,12 +303,15 @@ export default function DetailedDashboardPage() {
 
       if (bin1NodeData && bin1NodeData.fill_level_history && Array.isArray(bin1NodeData.fill_level_history)) {
         const rawHistory = bin1NodeData.fill_level_history;
+        const fillLevelHistoryIndex = bin1NodeData.fill_level_history_index; // Get the index
         console.log(">>> [Dashboard - Bin1 History] 'fill_level_history' is an array. Length:", rawHistory.length);
+        console.log(">>> [Dashboard - Bin1 History] 'fill_level_history_index':", fillLevelHistoryIndex);
         
         if (rawHistory.length === 0) {
           console.log(">>> [Dashboard - Bin1 History] Received empty 'fill_level_history' array.");
           setBin1HistoryData([]);
         } else {
+          // Filter out entries where fill_level is 0 or not a valid number
           const filteredHistory = rawHistory.filter(
             (item: any) => item && typeof item.fill_level === 'number' && item.fill_level > 0
           );
@@ -318,8 +321,9 @@ export default function DetailedDashboardPage() {
             console.log(">>> [Dashboard - Bin1 History] Filtered history is empty (all items had fill_level 0 or were invalid).");
             setBin1HistoryData([]);
           } else {
+            // Map for chart: uses the index of the *filtered* array for the x-axis
             const chartData = filteredHistory.map((item: any, chartIndex: number) => ({
-              index: chartIndex, 
+              index: chartIndex, // New 0-based index for the chart
               fill_level: item.fill_level,
             }));
             console.log(">>> [Dashboard - Bin1 History] Mapped chartData for plotting:", JSON.stringify(chartData, null, 2));
@@ -991,7 +995,7 @@ export default function DetailedDashboardPage() {
             <Alert className="text-xs sm:text-sm">
                 <PackageX className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <AlertTitle className="text-sm sm:text-base">No History for Bin1</AlertTitle>
-                <AlertDescription>No fill level history data found for 'bin1/fill_level_history'.</AlertDescription>
+                <AlertDescription>No fill level history data found for '/bin1' (after filtering out fill_level 0).</AlertDescription>
             </Alert>
           ) : (
             <ChartContainer config={{fill_level: {label: "Fill Level (%)", color: "hsl(var(--primary))"}}} className="h-[200px] sm:h-[220px] md:h-[250px] w-full"> {/* Reduced height */}
@@ -1047,9 +1051,5 @@ export default function DetailedDashboardPage() {
     </div>
   );
 }
-
-    
-
-    
 
     
