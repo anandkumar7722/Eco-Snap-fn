@@ -195,7 +195,7 @@ export default function DetailedDashboardPage() {
         const msg = "Firebase Firestore is not initialized. Please check your Firebase setup and environment variables.";
         setFirestoreDataError(msg);
         setIsLoading(false);
-        setLiveWasteData([]); // Ensure data is cleared if Firestore is not available
+        setLiveWasteData([]); 
         return;
     }
     if (!userId) {
@@ -286,14 +286,26 @@ export default function DetailedDashboardPage() {
     const bin1HistoryRef = ref(database, 'bin1/fill_level_history');
     const listener = onValue(bin1HistoryRef, (snapshot) => {
       const data = snapshot.val();
-      if (data && typeof data === 'object') {
+      // Check if data is an array (new structure)
+      if (Array.isArray(data)) {
+        const historyArray: Bin1FillLevelHistoryPoint[] = data
+          .map((item, index) => ({
+            index: index, // Use array index for X-axis
+            fill_level: typeof item?.fill_level === 'number' ? item.fill_level : 0, // Ensure fill_level is a number
+          }))
+          .filter(point => typeof point.fill_level === 'number'); // Filter out any malformed points
+
+        setBin1HistoryData(historyArray);
+        setBin1HistoryError(null);
+      } else if (data && typeof data === 'object' && !Array.isArray(data)) {
+        // Fallback for old object-based structure (can be removed later)
         const historyArray: Bin1FillLevelHistoryPoint[] = Object.keys(data)
           .map(key => ({
             index: parseInt(key, 10),
             fill_level: data[key] as number,
           }))
           .filter(point => !isNaN(point.index) && typeof point.fill_level === 'number')
-          .sort((a, b) => a.index - b.index); // Sort by index
+          .sort((a, b) => a.index - b.index);
         setBin1HistoryData(historyArray);
         setBin1HistoryError(null);
       } else {
@@ -360,7 +372,7 @@ export default function DetailedDashboardPage() {
   const totalWaste = useMemo(() => {
     return filteredData.reduce((sum, entry) => {
       const quantity = typeof entry.quantity === 'number' ? entry.quantity : 0;
-      return sum + (entry.unit === 'items' ? quantity * 0.1 : quantity);
+      return sum + (entry.unit === 'items' ? quantity * 0.1 : quantity); 
     }, 0).toFixed(1);
   }, [filteredData]);
 
@@ -376,7 +388,7 @@ export default function DetailedDashboardPage() {
   }, [categoryDistribution]);
 
   const generalPieOuterRadius = isMobileView ? 60 : 80;
-  const eWastePieOuterRadius = isMobileView ? 68 : 85; // Adjusted mobile radius
+  const eWastePieOuterRadius = isMobileView ? 68 : 85; 
 
 
   const renderPieLabel = ({ name, percent, x, y, midAngle, outerRadius: currentOuterRadius }: any) => {
@@ -681,11 +693,11 @@ export default function DetailedDashboardPage() {
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={isMobileView ? 68 : 85} // Slightly reduced mobile radius
-                    labelLine={false} // Ensure labels are inside
+                    outerRadius={eWastePieOuterRadius} 
+                    labelLine={false} 
                     label={{
-                        fontSize: isMobileView ? '8px' : '10px', // Reduced font size
-                        fill: '#FFFFFF', // Explicitly white labels
+                        fontSize: isMobileView ? '8px' : '10px', 
+                        fill: '#FFFFFF', 
                         formatter: (value: number, entry: any) => `${(entry.payload.percent * 100).toFixed(0)}%`,
                       }}
                   >
