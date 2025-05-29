@@ -302,7 +302,7 @@ export default function DetailedDashboardPage() {
       console.log(">>> [Dashboard - Bin1 History] Raw data received from Firebase for /bin1:", JSON.stringify(bin1NodeData, null, 2));
 
       if (bin1NodeData && bin1NodeData.fill_level_history && Array.isArray(bin1NodeData.fill_level_history)) {
-        const rawHistory = bin1NodeData.fill_level_history;
+        const rawHistory = bin1NodeData.fill_level_history as Array<{ fill_level: number, [key: string]: any } | null>;
         const fillLevelHistoryIndex = bin1NodeData.fill_level_history_index; // Get the index
         console.log(">>> [Dashboard - Bin1 History] 'fill_level_history' is an array. Length:", rawHistory.length);
         console.log(">>> [Dashboard - Bin1 History] 'fill_level_history_index':", fillLevelHistoryIndex);
@@ -353,7 +353,7 @@ export default function DetailedDashboardPage() {
       console.log(">>> [Dashboard - Bin1 History] Cleaning up listener for path:", bin1NodeRef.toString());
       off(bin1NodeRef, 'value', listener);
     };
-  }, [toast, database]); // Added database to dependency array
+  }, [toast]);
 
 
   useEffect(() => {
@@ -504,7 +504,6 @@ export default function DetailedDashboardPage() {
                 mode="range"
                 defaultMonth={dateRange?.from}
                 selected={dateRange}
-                onSelect={setDateRange}
                 numberOfMonths={isMobileView ? 1 : 2}
               />
             </PopoverContent>
@@ -995,7 +994,7 @@ export default function DetailedDashboardPage() {
             <Alert className="text-xs sm:text-sm">
                 <PackageX className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <AlertTitle className="text-sm sm:text-base">No History for Bin1</AlertTitle>
-                <AlertDescription>No fill level history data found for '/bin1' (after filtering out fill_level 0).</AlertDescription>
+                <AlertDescription>No valid fill level history data found for '/bin1' (after filtering out entries with fill_level 0).</AlertDescription>
             </Alert>
           ) : (
             <ChartContainer config={{fill_level: {label: "Fill Level (%)", color: "hsl(var(--primary))"}}} className="h-[200px] sm:h-[220px] md:h-[250px] w-full"> {/* Reduced height */}
@@ -1029,7 +1028,7 @@ export default function DetailedDashboardPage() {
                   fontSize={isMobileView ? "0.5rem" : "0.6rem"} // Smaller tick font
                 />
                 <RechartsTooltip
-                  cursor={{stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "3 3"}}
+                  cursor={{stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray="3 3"}}
                   content={<ChartTooltipContent indicator="line" nameKey="fill_level" labelKey="index" />}
                 />
 
@@ -1051,5 +1050,7 @@ export default function DetailedDashboardPage() {
     </div>
   );
 }
+
+    
 
     
